@@ -2,16 +2,22 @@ package ship.code.ui.controller;
 
 import ship.code.FormatFileNotFoundException;
 import ship.code.ui.view.LogFinderFrame;
+import ship.code.utils.TextFinder;
 
 import javax.swing.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.regex.Pattern;
 
 public class LogFinderFrameController {
@@ -20,6 +26,8 @@ public class LogFinderFrameController {
     private JButton findBtn;
     private File dir = null;
     private List<Path> listFiles;
+    private JTree tree;
+    private ExecutorService executor;
 
     public LogFinderFrameController() {
         initComponents();
@@ -42,6 +50,13 @@ public class LogFinderFrameController {
             }
         });
 
+        logFinderFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                super.windowClosing(e);
+            }
+        });
+
         findBtn.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -58,7 +73,7 @@ public class LogFinderFrameController {
                                 System.err.println(exp.getMessage());
                                 return false;
                             }
-                        })).forEach(listFiles::add);
+                        })).forEach(path -> executor.execute(new TextFinder(path, logFinderFrame.getSearchTextField().getText())));
                         System.out.println(listFiles.size());
                     } catch (IOException e1) {
                         e1.printStackTrace();
@@ -82,6 +97,8 @@ public class LogFinderFrameController {
         chooseDir = logFinderFrame.getChooseDirButton();
         findBtn = logFinderFrame.getFindBtn();
         listFiles = new ArrayList<>();
+        tree = logFinderFrame.getTreeFiles();
+        executor = Executors.newFixedThreadPool(20);
     }
 
     public void showLogFinderFrameController(){
