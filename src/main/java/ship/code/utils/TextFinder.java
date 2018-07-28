@@ -6,10 +6,12 @@ import java.nio.file.Path;
 public class TextFinder implements Runnable {
     private File file;
     private String word;
+    private Observable observable;
 
-    public TextFinder(Path path, String word) {
+    public TextFinder(Path path, String word, Observable observable) {
         this.file = path.toFile();
         this.word = word;
+        this.observable = observable;
     }
 
     @Override
@@ -18,6 +20,7 @@ public class TextFinder implements Runnable {
             String line;
             while((line = bf.readLine()) != null){
                 if(line.contains(word)){
+                    observable.find();
                     return;
                 }
             }
