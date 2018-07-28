@@ -22,14 +22,16 @@ public class LogFinderFrame extends JFrame{
     private JTextField searchTextField;
     private JTextField extOfFileField;
     private JPanel jPanel;
+    private JScrollPane scrollTreeFiles;
     private JMenuBar menuBar;
 
     public LogFinderFrame(){
+        JScrollBar scrollBar = scrollTreeFiles.createVerticalScrollBar();
+        System.out.println(scrollBar.getVisibleAmount());
         setSize(WIDTH,HEIGHT);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setContentPane(jPanel);
         setLocationRelativeTo(null);
-        FileModel fileModel = ViewModel.of();
 
         JMenuBar menuBar = new JMenuBar();
         JMenu menu = new JMenu("Find");
@@ -85,6 +87,10 @@ public class LogFinderFrame extends JFrame{
 
     public JPanel getjPanel() {
         return jPanel;
+    }
+
+    public JScrollPane getScrollTreeFiles() {
+        return scrollTreeFiles;
     }
 
     private void createUIComponents() {
