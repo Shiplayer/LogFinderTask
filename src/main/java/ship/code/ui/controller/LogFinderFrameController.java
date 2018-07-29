@@ -2,14 +2,14 @@ package ship.code.ui.controller;
 
 import ship.code.FormatFileNotFoundException;
 import ship.code.ui.view.LogFinderFrame;
+import ship.code.utils.FilesMutableTreeNode;
 import ship.code.utils.Observable;
 import ship.code.utils.TextFinder;
+import ship.code.utils.TreeSelectionListenerImpl;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.MutableTreeNode;
-import javax.swing.tree.TreeNode;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -20,11 +20,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.regex.Pattern;
 
 public class LogFinderFrameController {
@@ -37,6 +35,7 @@ public class LogFinderFrameController {
     private DefaultTreeModel root;
     private ExecutorService executor;
     private List<Path> pathList;
+    private FilesMutableTreeNode filesRoot;
 
     public LogFinderFrameController() {
         initComponents();
@@ -45,10 +44,13 @@ public class LogFinderFrameController {
 
     private void initListeners() {
 
+        tree.getSelectionModel().addTreeSelectionListener(new TreeSelectionListenerImpl());
+
         chooseDir.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
+                filesRoot.removeAllChildren();
                 JFileChooser fileChooser = new JFileChooser();
                 fileChooser.setDialogTitle("Choose directory for searching text");
                 fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -74,6 +76,7 @@ public class LogFinderFrameController {
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e); // TODO сделать в многопоточности (лочит UI)
                 final DefaultTreeModel finalRoot = root;
+                final FilesMutableTreeNode treeNode = (FilesMutableTreeNode) root.getRoot();
                 if(dir != null && !logFinderFrame.getExtOfFileField().getText().isEmpty()) {
                     new Thread(() -> {
                         try {
@@ -89,14 +92,13 @@ public class LogFinderFrameController {
                                 }
                             })).forEach(path -> executor.execute(new TextFinder(path, logFinderFrame.getSearchTextField().getText(),
                                     (Observable) () -> {
-                                        pathList.add(path);
                                         synchronized (finalRoot) {
-                                            finalRoot.insertNodeInto(new DefaultMutableTreeNode(path.toString()), (DefaultMutableTreeNode) finalRoot.getRoot(), ((DefaultMutableTreeNode) finalRoot.getRoot()).getChildCount());
+                                            //finalRoot.insertNodeInto(new DefaultMutableTreeNode(path.toString()), (DefaultMutableTreeNode) finalRoot.getRoot(), ((DefaultMutableTreeNode) finalRoot.getRoot()).getChildCount());
+                                            treeNode.addNode(path.toString().replace(dir.toPath().toString(), "").split(File.separator),1);
                                             //tree.setVisibleRowCount(((DefaultMutableTreeNode)finalRoot.getRoot()).getChildCount());
                                             finalRoot.reload();
                                         }
                                     })));
-                            System.out.println(pathList.size());
                         } catch (IOException e1) {
                             e1.printStackTrace();
                         }
@@ -122,20 +124,11 @@ public class LogFinderFrameController {
         listFiles = new ArrayList<>();
         tree = logFinderFrame.getTreeFiles();
         tree.clearSelection();
-        DefaultMutableTreeNode root = new DefaultMutableTreeNode("Files");
-        //create the child nodes
-        /*DefaultMutableTreeNode vegetableNode = new DefaultMutableTreeNode("Vegetables");
-        vegetableNode.add(new DefaultMutableTreeNode("Capsicum"));
-        vegetableNode.add(new DefaultMutableTreeNode("Carrot"));
-        vegetableNode.add(new DefaultMutableTreeNode("Tomato"));
-        vegetableNode.add(new DefaultMutableTreeNode("Potato"));
-        root.add(vegetableNode);*/
-        this.root = new DefaultTreeModel(root);
-        //tree = new JTree(root);
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode("root");
+        filesRoot = new FilesMutableTreeNode("filesRoot");
+        this.root = new DefaultTreeModel(filesRoot);
         tree.setModel(this.root);
         logFinderFrame.getScrollTreeFiles().getViewport().add(tree);
-        /*DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
-        model.setRoot(root);*/
         executor = Executors.newFixedThreadPool(20);
         pathList = Collections.synchronizedList(new ArrayList<>());
     }

@@ -96,8 +96,8 @@
               <component id="3b34a" class="javax.swing.JTree" binding="TreeFiles">
                 <constraints/>
                 <properties>
-                  <maximumSize width="150" height="72"/>
-                  <preferredSize width="150" height="72"/>
+                  <maximumSize width="-1" height="-1"/>
+                  <preferredSize width="300" height="-1"/>
                 </properties>
               </component>
             </children>

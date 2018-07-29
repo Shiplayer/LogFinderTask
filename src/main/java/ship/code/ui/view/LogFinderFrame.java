@@ -1,15 +1,7 @@
 package ship.code.ui.view;
 
-import ship.code.ui.model.ViewModel;
-import ship.code.utils.FileModel;
-
 import javax.swing.*;
-import javax.swing.event.MenuKeyEvent;
-import javax.swing.event.MenuKeyListener;
-import javax.swing.event.MenuListener;
 import java.awt.event.ActionEvent;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 
 public class LogFinderFrame extends JFrame{
     private static final int WIDTH = 1100;
