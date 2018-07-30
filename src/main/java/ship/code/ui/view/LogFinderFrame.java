@@ -20,6 +20,7 @@ public class LogFinderFrame extends JFrame{
     private JMenu menu;
 
     public LogFinderFrame(){
+        extOfFileField.setText(".log");
         progressFinder.setVisible(false);
         scrollTreeFiles.setViewportView(TreeFiles);
         JScrollBar scrollBar = scrollTreeFiles.createVerticalScrollBar();
@@ -28,40 +29,15 @@ public class LogFinderFrame extends JFrame{
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setContentPane(jPanel);
         setLocationRelativeTo(null);
-
-        JMenuBar menuBar = new JMenuBar();
+        menuBar = new JMenuBar();
         menu = new JMenu("Tab");
-        JMenuItem selectAll = new JMenuItem("Select All");
-        menu.add(selectAll);
-        selectAll.setAccelerator(KeyStroke.getKeyStroke("alt A"));
-        selectAll.addActionListener(new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println(e.getActionCommand());
-            }
-        });
-        JMenuItem next = new JMenuItem("Next");
-        menu.add(next);
-        next.setAccelerator(KeyStroke.getKeyStroke("control F"));
-        next.addActionListener(new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println(e.getActionCommand());
-            }
-        });
         menuBar.add(menu);
         this.setJMenuBar(menuBar);
-        JMenuItem closeTab = new JMenuItem("Close Tab");
-        menu.add(closeTab);
-        closeTab.setAccelerator(KeyStroke.getKeyStroke("ctrl W"));
-        closeTab.addActionListener(new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("action");
-                fileShowPanel.remove(fileShowPanel.getSelectedComponent());
-            }
-        });
         menu.setVisible(false);
+    }
+
+    public JMenu getMenu() {
+        return menu;
     }
 
     public JButton getFindBtn() {
@@ -102,10 +78,6 @@ public class LogFinderFrame extends JFrame{
 
     public JScrollPane getScrollTreeFiles() {
         return scrollTreeFiles;
-    }
-
-    public void createMenuItem(){
-
     }
 
     private void createUIComponents() {

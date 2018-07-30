@@ -5,6 +5,7 @@ import ship.code.TextOfFileView;
 import ship.code.ui.view.LogFinderFrame;
 import ship.code.utils.FilesMutableTreeNode;
 import ship.code.utils.Observable;
+import ship.code.utils.OpenDefaultEditor;
 import ship.code.utils.TextFinder;
 
 import javax.swing.*;
@@ -42,26 +43,79 @@ public class LogFinderFrameController {
     }
 
     private void initListeners() {
+        JMenu menu = logFinderFrame.getMenu();
+        JMenuItem selectAll = new JMenuItem("Select All");
+        menu.add(selectAll);
+        selectAll.setAccelerator(KeyStroke.getKeyStroke("alt A"));
+        selectAll.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                getTextOfFileViewFromPanel((JPanel) logFinderFrame.getFileShowPanel().getSelectedComponent()).selectAll();
+            }
+        });
+        JMenuItem next = new JMenuItem("Next");
+        menu.add(next);
+        next.setAccelerator(KeyStroke.getKeyStroke("control F"));
+        next.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                TextOfFileView view = getTextOfFileViewFromPanel((JPanel) logFinderFrame.getFileShowPanel().getSelectedComponent());
+                int pos = (int) view.getNextCaretPosition();
+                view.select(pos, pos + logFinderFrame.getSearchTextField().getText().length());
+            }
+        });
+        JMenuItem closeTab = new JMenuItem("Close Tab");
+        menu.add(closeTab);
+        closeTab.setAccelerator(KeyStroke.getKeyStroke("ctrl W"));
+        closeTab.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                logFinderFrame.getFileShowPanel().remove(logFinderFrame.getFileShowPanel().getSelectedComponent());
+            }
+        });
+
+        JMenuItem openInEditor = new JMenuItem("Open in editor");
+        menu.add(openInEditor);
+        openInEditor.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                TextOfFileView view = getTextOfFileViewFromPanel((JPanel) logFinderFrame.getFileShowPanel().getSelectedComponent());
+                try {
+                    if(Desktop.isDesktopSupported()) {
+                        if(Desktop.getDesktop().isSupported(Desktop.Action.EDIT))
+                            Desktop.getDesktop().edit(view.getSrcFile());
+                        else
+                            OpenDefaultEditor.open(view.getSrcFile());
+                            /*if(!System.getProperty("os.name").equalsIgnoreCase("windows")) {
+                                Runtime.getRuntime().exec("nano " + view.getSrcFile().getPath());
+                                System.out.println("nano");
+                            }*/
+                    }
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        });
+
         logFinderFrame.getFileShowPanel().addChangeListener(e -> {
             JTabbedPane tabbedPane = (JTabbedPane) e.getSource();
-            if(tabbedPane.getTabCount() > 0)
+            if (tabbedPane.getTabCount() > 0)
                 logFinderFrame.showMenuTab();
             else
                 logFinderFrame.hiddenMenuTab();
             System.out.println(tabbedPane.getName());
 
             JPanel panel = (JPanel) tabbedPane.getSelectedComponent();
-            for(Component component : panel.getComponents()){
-                System.out.println(component.getClass());
-                if(component.getClass() == JScrollPane.class){
-                    TextOfFileView view = (TextOfFileView) ((JScrollPane) component).getViewport().getView();
-                    int index = (int) view.getNextCaretPosition();
-                    view.requestFocus();
-                    view.setSelectedTextColor(Color.BLUE);
-                    view.select(index , index + logFinderFrame.getSearchTextField().getText().length());
-                    System.out.println(view.getSelectedText());
-                }
+
+            TextOfFileView view = getTextOfFileViewFromPanel(panel);
+            if(view != null) {
+                int index = (int) view.getNextCaretPosition();
+                view.requestFocus();
+                view.setSelectedTextColor(Color.BLUE);
+                view.select(index, index + logFinderFrame.getSearchTextField().getText().length());
             }
+            else
+                System.err.println("view is null");
         });
 
         tree.addKeyListener(new KeyAdapter() {
@@ -108,7 +162,7 @@ public class LogFinderFrameController {
         findBtn.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                super.mouseClicked(e); // TODO сделать в многопоточности (лочит UI)
+                super.mouseClicked(e);
                 if(dir != null && !logFinderFrame.getExtOfFileField().getText().isEmpty()) {
                     new SwingWorkerFinder(logFinderFrame.getProgressFinder()).execute();
                 }
@@ -128,6 +182,17 @@ public class LogFinderFrameController {
             filesRoot.removeAllChildren();
             ((DefaultTreeModel)tree.getModel()).reload();
         }
+    }
+
+    private TextOfFileView getTextOfFileViewFromPanel(JPanel panel){
+        if(panel != null) {
+            for (Component component : panel.getComponents()) {
+                if (component.getClass() == JScrollPane.class) {
+                    return  (TextOfFileView) ((JScrollPane) component).getViewport().getView();
+                }
+            }
+        }
+        return null;
     }
 
     private static String getExtension(File file){
@@ -187,10 +252,14 @@ public class LogFinderFrameController {
     }
 
     private synchronized void addNode(final FilesMutableTreeNode treeNode, final DefaultTreeModel finalRoot, String path) {
-        TreeNode n = treeNode.addNode(path.replace(dir.toPath().toString(), "").split(File.separator), 1, null);
-        //tree.setVisibleRowCount(((DefaultMutableTreeNode)finalRoot.getRoot()).getChildCount());
-        if (n != null) {
-            finalRoot.reload();
+        try {
+            TreeNode n = treeNode.addNode(path.replace(dir.toPath().toString(), "").split(File.separator), 1, null);
+            //tree.setVisibleRowCount(((DefaultMutableTreeNode)finalRoot.getRoot()).getChildCount());
+            if (n != null) {
+                SwingUtilities.invokeLater(finalRoot::reload);
+            }
+        } catch (ArrayIndexOutOfBoundsException e){
+            System.err.println(e.getMessage());
         }
 
     }
@@ -213,16 +282,20 @@ public class LogFinderFrameController {
                     try {
                         String extension = getExtension(path.toFile());
 
-                        Pattern pattern = Pattern.compile(logFinderFrame.getExtOfFileField().getText());
+                        Pattern pattern = Pattern.compile("("+logFinderFrame.getExtOfFileField().getText()+")$");
                         return pattern.matcher(extension).find();
                     } catch (FormatFileNotFoundException exp) {
                         //System.err.println(exp.getMessage());
                         return false;
                     }
-                })).forEach(path -> executor.execute(new TextFinder(path, logFinderFrame.getSearchTextField().getText(),
-                        (Observable) () -> {
-                            addNode(treeNode, finalRoot, path.toString());
-                        })));
+                })).forEach(path -> {
+                    if(path.toFile().isFile())
+                        executor.execute(new TextFinder(
+                                path,
+                                logFinderFrame.getSearchTextField().getText(),
+                                () -> addNode(treeNode, finalRoot, path.toString())
+                        ));
+                });
             } catch (IOException | ArrayIndexOutOfBoundsException e1) {
                 System.err.println("holy error");
                 e1.printStackTrace();
