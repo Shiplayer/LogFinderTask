@@ -1,6 +1,7 @@
 package ship.code.ui.view;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 
 public class LogFinderFrame extends JFrame{
@@ -14,18 +15,18 @@ public class LogFinderFrame extends JFrame{
     private JTextField searchTextField;
     private JTextField extOfFileField;
     private JPanel jPanel;
-    private JScrollPane scrollTreeFiles;
     private JProgressBar progressFinder;
+    private JPanel panelForTree;
     private JMenuBar menuBar;
     private JMenu menu;
 
     public LogFinderFrame(){
         extOfFileField.setText(".log");
         progressFinder.setVisible(false);
-        scrollTreeFiles.setViewportView(TreeFiles);
-        JScrollBar scrollBar = scrollTreeFiles.createVerticalScrollBar();
-        System.out.println(scrollBar.getVisibleAmount());
         setSize(WIDTH,HEIGHT);
+        TreeFiles = new JTree();
+        JScrollPane jScrollPane = new JScrollPane(TreeFiles);
+        panelForTree.add(jScrollPane, BorderLayout.CENTER);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setContentPane(jPanel);
         setLocationRelativeTo(null);
@@ -74,10 +75,6 @@ public class LogFinderFrame extends JFrame{
 
     public JProgressBar getProgressFinder() {
         return progressFinder;
-    }
-
-    public JScrollPane getScrollTreeFiles() {
-        return scrollTreeFiles;
     }
 
     private void createUIComponents() {

@@ -33,7 +33,6 @@
           </grid>
         </constraints>
         <properties>
-          <labelFor value="ec744"/>
           <text value="Find text:"/>
         </properties>
       </component>
@@ -78,23 +77,12 @@
             <border type="none"/>
             <children/>
           </tabbedpane>
-          <scrollpane id="ec744" binding="scrollTreeFiles">
+          <grid id="2ce66" binding="panelForTree" layout-manager="BorderLayout" hgap="0" vgap="0">
             <constraints border-constraint="West"/>
-            <properties>
-              <horizontalScrollBarPolicy value="32"/>
-              <verticalScrollBarPolicy value="22"/>
-            </properties>
+            <properties/>
             <border type="none"/>
-            <children>
-              <component id="3b34a" class="javax.swing.JTree" binding="TreeFiles">
-                <constraints/>
-                <properties>
-                  <maximumSize width="300" height="100"/>
-                  <preferredSize width="300" height="-1"/>
-                </properties>
-              </component>
-            </children>
-          </scrollpane>
+            <children/>
+          </grid>
         </children>
       </grid>
       <component id="f617" class="javax.swing.JButton" binding="chooseDirButton">

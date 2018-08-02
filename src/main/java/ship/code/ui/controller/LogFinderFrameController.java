@@ -215,7 +215,6 @@ public class LogFinderFrameController {
         filesRoot = new FilesMutableTreeNode("filesRoot");
         this.root = new DefaultTreeModel(filesRoot);
         tree.setModel(this.root);
-        logFinderFrame.getScrollTreeFiles().getViewport().add(tree);
         executor = Executors.newFixedThreadPool(20);
         pathList = Collections.synchronizedList(new ArrayList<>());
     }
@@ -253,7 +252,11 @@ public class LogFinderFrameController {
 
     private synchronized void addNode(final FilesMutableTreeNode treeNode, final DefaultTreeModel finalRoot, String path) {
         try {
-            TreeNode n = treeNode.addNode(path.replace(dir.toPath().toString(), "").split(File.separator), 1, null);
+            TreeNode n;
+            if(System.getProperty("os.name").toLowerCase().contains("windows")) {
+                n = treeNode.addNode(path.replace(dir.toPath().toString(), "").split("\\\\"), 1, null);
+            } else
+                n = treeNode.addNode(path.replace(dir.toPath().toString(), "").split(File.separator), 1, null);
             //tree.setVisibleRowCount(((DefaultMutableTreeNode)finalRoot.getRoot()).getChildCount());
             if (n != null) {
                 SwingUtilities.invokeLater(finalRoot::reload);
