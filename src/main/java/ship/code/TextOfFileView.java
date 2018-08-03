@@ -7,8 +7,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class TextOfFileView extends JTextArea {
-    private List<Long> findTextIndex;
-    private long totalChars = 0;
+    private List<Integer> findTextIndex;
+    private int totalChars = 0;
     private int position = 0;
     private boolean isFileLarge = false;
     private File srcFile;
@@ -16,6 +16,8 @@ public class TextOfFileView extends JTextArea {
     private List<String[]> findLines;
     private boolean continueFind;
     private String txt;
+    private String selectedLine;
+    private int currPosInLine = -1;
 
     public TextOfFileView() {
         findTextIndex = new ArrayList<>();
@@ -35,11 +37,14 @@ public class TextOfFileView extends JTextArea {
         if (srcFile == null)
             srcFile = file;
         String line;
-        int index;
+        int index = 0;
+        int caret;
         if (srcFile.length() < Integer.MAX_VALUE) {
             while ((line = bf.readLine()) != null) {
-                if ((index = line.indexOf(txt)) != -1) {
-                    findTextIndex.add(totalChars + index);
+                caret = 0;
+                while (line.indexOf(txt, caret) != -1) {
+                    caret = line.indexOf(txt, caret) + 1;
+                    findTextIndex.add(totalChars + caret - 1);
                 }
                 append(line);
                 append("\n");
@@ -71,6 +76,14 @@ public class TextOfFileView extends JTextArea {
     }
 
     public long getNextCaretPosition() {
+        if(selectedLine != null && !selectedLine.isEmpty()){
+            int newIndex = selectedLine.indexOf(txt, currPosInLine + 1);
+            if(selectedLine.lastIndexOf(txt) == newIndex)
+                selectedLine = null;
+            int distance = newIndex - currPosInLine;
+            currPosInLine = newIndex;
+            return totalChars + distance;
+        }
         if (!isFileLarge) {
             totalChars = findTextIndex.get(position++);
             if(position == findTextIndex.size())
@@ -90,7 +103,7 @@ public class TextOfFileView extends JTextArea {
                         continueFind = true;
                         totalChars = totalText.indexOf(txt);
                     } else {
-                        totalChars = totalText.indexOf(txt, (int) totalChars + 1);
+                        totalChars = totalText.indexOf(txt, totalChars + 1);
                         if (totalChars == totalText.lastIndexOf(txt)) {
                             continueFind = false;
                             position = 0;
@@ -104,21 +117,28 @@ public class TextOfFileView extends JTextArea {
             if (position == findLines.size())
                 position = 0;
             int index;
-            long pos = -1;
+            currPosInLine = -1;
             for (int i = lines.length - 1; i >= 0; i--) {
                 String l = lines[i];
                 append(l);
                 append("\n");
-                if (pos == -1) {
-                    if ((index = l.indexOf(txt)) != -1 && i == lines.length / 2 - 1) {
-                        totalChars += index;
-                        pos = totalChars;
-                    } else
+                if (currPosInLine == -1) {
+                    if( i == countLines - 1) {
+                        if ((index = l.indexOf(txt)) != l.lastIndexOf(txt) && index != -1) {
+                            selectedLine = l;
+                            currPosInLine = l.indexOf(txt);
+                            totalChars += currPosInLine;
+                        } else if(index != -1){
+                            selectedLine = null;
+                            totalChars += index;
+                            currPosInLine = index;
+                        }
+                    }else
                         totalChars += l.length() + 1;
                 }
             }
 
-            return pos;
+            return totalChars;
         }
     }
 }

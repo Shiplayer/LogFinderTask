@@ -8,6 +8,7 @@ import ship.code.utils.OpenDefaultEditor;
 import ship.code.utils.TextFinder;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 import java.awt.*;
@@ -28,6 +29,7 @@ public class LogFinderFrameController {
     private DefaultTreeModel root;
     private ExecutorService executor;
     private FilesMutableTreeNode filesRoot;
+    private Border defaultBorder;
 
     public LogFinderFrameController() {
         initComponents();
@@ -78,10 +80,6 @@ public class LogFinderFrameController {
                             Desktop.getDesktop().edit(view.getSrcFile());
                         else
                             OpenDefaultEditor.open(view.getSrcFile());
-                            /*if(!System.getProperty("os.name").equalsIgnoreCase("windows")) {
-                                Runtime.getRuntime().exec("nano " + view.getSrcFile().getPath());
-                                System.out.println("nano");
-                            }*/
                     }
                 } catch (IOException e1) {
                     e1.printStackTrace();
@@ -95,7 +93,6 @@ public class LogFinderFrameController {
                 logFinderFrame.showMenuTab();
             else
                 logFinderFrame.hiddenMenuTab();
-            System.out.println(tabbedPane.getName());
 
             JPanel panel = (JPanel) tabbedPane.getSelectedComponent();
 
@@ -155,9 +152,20 @@ public class LogFinderFrameController {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
-                if(dir != null && !logFinderFrame.getExtOfFileField().getText().isEmpty()) {
-                    new SwingWorkerFinder(logFinderFrame.getProgressFinder()).execute();
-                }
+                boolean colored = false;
+                if (logFinderFrame.getSearchTextField().getText().isEmpty()) {
+                    logFinderFrame.getSearchTextField().setBorder(BorderFactory.createLineBorder(Color.RED));
+                    colored = true;
+                } else
+                    logFinderFrame.getSearchTextField().setBorder(defaultBorder);
+                if (logFinderFrame.getPathOfFileView().getText().isEmpty()) {
+                    logFinderFrame.getPathOfFileView().setBorder(BorderFactory.createLineBorder(Color.RED));
+                    colored = true;
+                } else
+                    logFinderFrame.getPathOfFileView().setBorder(defaultBorder);
+                if (colored)
+                    return;
+                new SwingWorkerFinder(logFinderFrame.getProgressFinder()).execute();
             }
         });
     }
@@ -171,6 +179,7 @@ public class LogFinderFrameController {
         if(fileChooser.getSelectedFile() != null) {
             dir = fileChooser.getSelectedFile();
             logFinderFrame.getPathOfFileView().setText(fileChooser.getSelectedFile().getPath());
+            logFinderFrame.getPathOfFileView().setBorder(defaultBorder);
             filesRoot.removeAllChildren();
             ((DefaultTreeModel)tree.getModel()).reload();
         }
@@ -201,6 +210,7 @@ public class LogFinderFrameController {
         chooseDir = logFinderFrame.getChooseDirButton();
         findBtn = logFinderFrame.getFindBtn();
         tree = logFinderFrame.getTreeFiles();
+        defaultBorder = logFinderFrame.getSearchTextField().getBorder();
         tree.clearSelection();
         filesRoot = new FilesMutableTreeNode("filesRoot");
         this.root = new DefaultTreeModel(filesRoot);
@@ -269,13 +279,21 @@ public class LogFinderFrameController {
             final FilesMutableTreeNode treeNode = (FilesMutableTreeNode) root.getRoot();
             try {
                 Files.find(dir.toPath(), Integer.MAX_VALUE, ((path, basicFileAttributes) -> {
+                    if(path.toFile().isDirectory()){
+                        return false;
+                    }
                     try {
+                        System.out.println(path);
                         String extension = getExtension(path.toFile());
-
-                        Pattern pattern = Pattern.compile("("+logFinderFrame.getExtOfFileField().getText()+")$");
+                        String ext;
+                        if(logFinderFrame.getExtOfFileField().getText().isEmpty()) {
+                            ext = ".log";
+                        } else
+                            ext = logFinderFrame.getExtOfFileField().getText();
+                        Pattern pattern = Pattern.compile("(" + ext + ")$");
                         return pattern.matcher(extension).find();
                     } catch (FormatFileNotFoundException exp) {
-                        //System.err.println(exp.getMessage());
+                        System.err.println(path);
                         return false;
                     }
                 })).forEach(path -> {
@@ -286,8 +304,7 @@ public class LogFinderFrameController {
                                 () -> addNode(treeNode, finalRoot, path.toString())
                         ));
                 });
-            } catch (IOException | ArrayIndexOutOfBoundsException e1) {
-                System.err.println("holy error");
+            } catch (IOException e1) {
                 e1.printStackTrace();
             }
             return null;

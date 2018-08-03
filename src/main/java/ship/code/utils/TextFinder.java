@@ -25,6 +25,7 @@ public class TextFinder implements Runnable {
                 }
             }
         } catch (IOException e) {
+            System.err.println(file.getName() + " " + file.getPath());
             e.printStackTrace();
         }
     }
