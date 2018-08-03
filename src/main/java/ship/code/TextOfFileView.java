@@ -70,12 +70,6 @@ public class TextOfFileView extends JTextArea {
         }
     }
 
-    public void showIndexes() {
-        for (long value : findTextIndex) {
-            System.out.println(value);
-        }
-    }
-
     public long getNextCaretPosition() {
         if (!isFileLarge) {
             totalChars = findTextIndex.get(position++);

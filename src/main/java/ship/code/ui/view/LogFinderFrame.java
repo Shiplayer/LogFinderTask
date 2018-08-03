@@ -2,7 +2,6 @@ package ship.code.ui.view;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 
 public class LogFinderFrame extends JFrame{
     private static final int WIDTH = 1100;
@@ -17,7 +16,6 @@ public class LogFinderFrame extends JFrame{
     private JPanel jPanel;
     private JProgressBar progressFinder;
     private JPanel panelForTree;
-    private JMenuBar menuBar;
     private JMenu menu;
 
     public LogFinderFrame(){
@@ -30,7 +28,7 @@ public class LogFinderFrame extends JFrame{
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setContentPane(jPanel);
         setLocationRelativeTo(null);
-        menuBar = new JMenuBar();
+        JMenuBar menuBar = new JMenuBar();
         menu = new JMenu("Tab");
         menuBar.add(menu);
         this.setJMenuBar(menuBar);
@@ -67,10 +65,6 @@ public class LogFinderFrame extends JFrame{
 
     public JTextField getExtOfFileField() {
         return extOfFileField;
-    }
-
-    public JPanel getjPanel() {
-        return jPanel;
     }
 
     public JProgressBar getProgressFinder() {

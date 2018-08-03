@@ -4,12 +4,10 @@ import ship.code.FormatFileNotFoundException;
 import ship.code.TextOfFileView;
 import ship.code.ui.view.LogFinderFrame;
 import ship.code.utils.FilesMutableTreeNode;
-import ship.code.utils.Observable;
 import ship.code.utils.OpenDefaultEditor;
 import ship.code.utils.TextFinder;
 
 import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 import java.awt.*;
@@ -17,10 +15,6 @@ import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
@@ -30,11 +24,9 @@ public class LogFinderFrameController {
     private JButton chooseDir;
     private JButton findBtn;
     private File dir = null;
-    private List<Path> listFiles;
     private JTree tree;
     private DefaultTreeModel root;
     private ExecutorService executor;
-    private List<Path> pathList;
     private FilesMutableTreeNode filesRoot;
 
     public LogFinderFrameController() {
@@ -208,15 +200,12 @@ public class LogFinderFrameController {
         logFinderFrame = new LogFinderFrame();
         chooseDir = logFinderFrame.getChooseDirButton();
         findBtn = logFinderFrame.getFindBtn();
-        listFiles = new ArrayList<>();
         tree = logFinderFrame.getTreeFiles();
         tree.clearSelection();
-        DefaultMutableTreeNode root = new DefaultMutableTreeNode("root");
         filesRoot = new FilesMutableTreeNode("filesRoot");
         this.root = new DefaultTreeModel(filesRoot);
         tree.setModel(this.root);
         executor = Executors.newFixedThreadPool(20);
-        pathList = Collections.synchronizedList(new ArrayList<>());
     }
 
     public void showLogFinderFrameController(){
@@ -237,8 +226,6 @@ public class LogFinderFrameController {
             jPanel.add(jScrollPane, BorderLayout.CENTER);
             try {
                 textArea.readAndFind(file, logFinderFrame.getSearchTextField().getText());
-                textArea.showIndexes();
-                System.out.println(textArea.getCaret().isVisible());
 
             } catch (IOException e1) {
                 e1.printStackTrace();

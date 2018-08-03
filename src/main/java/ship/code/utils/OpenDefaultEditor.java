@@ -7,48 +7,46 @@ public class OpenDefaultEditor {
     private enum EnumOS {windows, macos, solaris, linux, unknown}
 
 
-    public static boolean open(File file) {
+    public static void open(File file) {
 
-        if (openSystemSpecific(file.getPath())) return true;
+        openSystemSpecific(file.getPath());
 
-        return false;
     }
 
-    private static boolean openSystemSpecific(String what) {
+    private static void openSystemSpecific(String what) {
 
         EnumOS os = getOs();
 
-        if (os == EnumOS.linux) {
-            if (runCommand("kde-open", what)) return true;
-            if (runCommand("gnome-open", what)) return true;
-            if (runCommand("xdg-open", what)) return true;
+        switch (os) {
+            case linux:
+                runCommand("kde-open", what);
+                runCommand("gnome-open", what);
+                runCommand("xdg-open", what);
+                break;
+
+            case macos:
+                runCommand("open", what);
+                break;
+
+            case windows:
+                runCommand("explorer", what);
+                break;
         }
 
-        if (os == EnumOS.macos) {
-            if (runCommand("open", what)) return true;
-        }
-
-        if (os == EnumOS.windows) {
-            if (runCommand("explorer", what)) return true;
-        }
-
-        return false;
     }
 
 
-    private static boolean runCommand(String command, String file) {
+    private static void runCommand(String command, String file) {
         String[] parts = new String[]{command, file};
         try {
-            Process p = Runtime.getRuntime().exec(parts);
-            return p != null;
+            Runtime.getRuntime().exec(parts);
 
         } catch (IOException e) {
             System.err.println("Error running command." + " " + e.getMessage());
-            return false;
         }
     }
 
-    public static EnumOS getOs() {
+    private static EnumOS getOs() {
 
         String s = System.getProperty("os.name").toLowerCase();
 
