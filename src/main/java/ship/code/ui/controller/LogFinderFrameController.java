@@ -119,7 +119,6 @@ public class LogFinderFrameController {
                 if(e.getKeyCode() == KeyEvent.VK_ENTER){
                     openFile();
                 }
-                else System.out.println(e.getKeyCode() + " vs " + KeyEvent.VK_UNDEFINED);
             }
         });
 
@@ -202,7 +201,7 @@ public class LogFinderFrameController {
         if(lastIndex != 0 && lastIndex != -1)
             return fileName.substring(lastIndex);
         else
-            throw new FormatFileNotFoundException("format file error");
+            return "";
     }
 
     private void initComponents() {
@@ -215,7 +214,7 @@ public class LogFinderFrameController {
         filesRoot = new FilesMutableTreeNode("filesRoot");
         this.root = new DefaultTreeModel(filesRoot);
         tree.setModel(this.root);
-        executor = Executors.newFixedThreadPool(20);
+        executor = Executors.newFixedThreadPool(50);
     }
 
     public void showLogFinderFrameController(){
@@ -283,7 +282,6 @@ public class LogFinderFrameController {
                         return false;
                     }
                     try {
-                        System.out.println(path);
                         String extension = getExtension(path.toFile());
                         String ext;
                         if(logFinderFrame.getExtOfFileField().getText().isEmpty()) {
@@ -297,12 +295,13 @@ public class LogFinderFrameController {
                         return false;
                     }
                 })).forEach(path -> {
-                    if(path.toFile().isFile())
+                    if(path.toFile().isFile()) {
                         executor.execute(new TextFinder(
                                 path,
                                 logFinderFrame.getSearchTextField().getText(),
                                 () -> addNode(treeNode, finalRoot, path.toString())
                         ));
+                    }
                 });
             } catch (IOException e1) {
                 e1.printStackTrace();

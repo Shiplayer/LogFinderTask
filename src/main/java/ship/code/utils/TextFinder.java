@@ -1,6 +1,8 @@
 package ship.code.utils;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
@@ -20,16 +22,13 @@ public class TextFinder implements Runnable {
     @Override
     public void run() {
         try (FileChannel channel = new RandomAccessFile(file, "r").getChannel()){
-            Charset charset = Charset.forName("ASCII");
+            Charset charset = Charset.forName("UTF-8");
             ByteBuffer byteBuffer = ByteBuffer.allocate(4096);
             String line;
             long position = word.length();
-            long count = 0;
-            while((position += channel.read(byteBuffer, position - word.length())) != -1){
-                count++;
-                if(count % 1000 == 0){
-                    System.out.println(file.getName() + " " + ((double)position / (double)file.length()) * 100);
-                }
+            long readCount;
+            while((readCount = channel.read(byteBuffer, position - word.length())) != -1){
+                position += readCount;
                 line = charset.decode((ByteBuffer)byteBuffer.flip()).toString();
                 if(line.contains(word)){
                     observable.find();
