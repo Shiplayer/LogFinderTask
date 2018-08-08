@@ -39,7 +39,7 @@ public class TextOfFileView extends JTextArea {
         String line;
         int index = 0;
         int caret;
-        if (srcFile.length() < Integer.MAX_VALUE) {
+        if (srcFile.length() < 1e7) {
             while ((line = bf.readLine()) != null) {
                 caret = 0;
                 while (line.indexOf(txt, caret) != -1) {

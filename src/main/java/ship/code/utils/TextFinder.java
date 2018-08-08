@@ -1,6 +1,9 @@
 package ship.code.utils;
 
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 
 public class TextFinder implements Runnable {
@@ -16,13 +19,23 @@ public class TextFinder implements Runnable {
 
     @Override
     public void run() {
-        try (BufferedReader bf = new BufferedReader(new InputStreamReader(new FileInputStream(file)))){
+        try (FileChannel channel = new RandomAccessFile(file, "r").getChannel()){
+            Charset charset = Charset.forName("ASCII");
+            ByteBuffer byteBuffer = ByteBuffer.allocate(4096);
             String line;
-            while((line = bf.readLine()) != null){
+            long position = word.length();
+            long count = 0;
+            while((position += channel.read(byteBuffer, position - word.length())) != -1){
+                count++;
+                if(count % 1000 == 0){
+                    System.out.println(file.getName() + " " + ((double)position / (double)file.length()) * 100);
+                }
+                line = charset.decode((ByteBuffer)byteBuffer.flip()).toString();
                 if(line.contains(word)){
                     observable.find();
                     return;
                 }
+                byteBuffer.clear();
             }
         } catch (IOException e) {
             System.err.println(file.getName() + " " + file.getPath());
